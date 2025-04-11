@@ -15,11 +15,18 @@ CLASS_LABELS_EMOJIS = ["👿", "🤢", "😱", "😊", "😐", "😔", "😲"]
 
 # Function to preprocess image
 def preprocess_image(image_path):
-    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    img = cv2.resize(img, (48, 48))
-    img = img.astype('float32') / 255.0
-    img = np.expand_dims(img, axis=0)  # Add batch dimension
-    img = np.expand_dims(img, axis=-1) # Add channel dimension
+    img = cv2.imread(image_path, cv2.IMREAD_REDUCED_GRAYSCALE_2)  # Lecture de l'image en niveaux de gris
+    img = cv2.resize(img, (48, 48))  # Redimensionnement à 48x48 pixels (taille attendue par le modèle)
+    img = cv2.equalizeHist(img)  # Égalisation de l'histogramme pour améliorer le contraste
+    img = cv2.GaussianBlur(img, (3, 3), 0)  # Flou léger pour réduire le bruit
+    # Filtre pour renforcer les contours (netteté)
+    sharpening_kernel = np.array([[0, -1, 0],
+                                  [-1, 5, -1],
+                                  [0, -1, 0]])
+    img = cv2.filter2D(img, -1, sharpening_kernel)
+    img = img.astype('float32') / 255.0  # Normalisation des pixels entre 0 et 1
+    img = np.expand_dims(img, axis=0)  # Ajout de la dimension batch
+    img = np.expand_dims(img, axis=-1)  # Ajout de la dimension channel
     return img
 
 # Function to predict emotion
